@@ -1,0 +1,25 @@
+count 24 syncedAt 2026-06-18T05:19:27.041Z
+1 finished 06/11/2026 13:00 MEX-RSA 2-0 elapsed=finished lineup=N
+2 finished 06/11/2026 20:00 KOR-CZE 2-1 elapsed=finished lineup=N
+3 finished 06/12/2026 15:00 CAN-BIH 1-1 elapsed=finished lineup=N
+4 finished 06/12/2026 18:00 USA-PAR 4-1 elapsed=finished lineup=N
+5 finished 06/13/2026 21:00 HAI-SCO 0-1 elapsed=finished lineup=N
+6 finished 06/13/2026 21:00 AUS-TUR 2-0 elapsed=finished lineup=N
+7 finished 06/13/2026 18:00 BRA-MAR 1-1 elapsed=finished lineup=N
+8 finished 06/13/2026 12:00 QAT-SUI 1-1 elapsed=finished lineup=N
+9 finished 06/14/2026 19:00 CIV-ECU 1-0 elapsed=finished lineup=N
+10 finished 06/14/2026 12:00 GER-CUW 7-1 elapsed=finished lineup=N
+11 finished 06/14/2026 15:00 NED-JPN 2-2 elapsed=finished lineup=N
+12 finished 06/14/2026 20:00 SWE-TUN 5-1 elapsed=finished lineup=N
+13 finished 06/15/2026 18:00 IRN-NZL 2-2 elapsed=finished lineup=Y
+14 finished 06/15/2026 12:00 ESP-CPV 0-0 elapsed=finished lineup=N
+15 finished 06/15/2026 12:00 BEL-EGY 1-1 elapsed=finished lineup=N
+16 finished 06/15/2026 18:00 KSA-URU 1-1 elapsed=finished lineup=N
+17 finished 06/16/2026 15:00 FRA-SEN 3-1 elapsed=finished lineup=N
+18 finished 06/16/2026 18:00 IRQ-NOR 1-4 elapsed=finished lineup=N
+19 finished 06/16/2026 20:00 ARG-ALG 3-0 elapsed=finished lineup=Y
+20 finished 06/16/2026 21:00 AUT-JOR 3-1 elapsed=finished lineup=Y
+21 finished 06/17/2026 12:00 POR-COD 1-1 elapsed=Finished lineup=Y
+22 finished 06/17/2026 15:00 ENG-CRO 4-2 elapsed=finished lineup=Y
+23 finished 06/17/2026 20:00 UZB-COL 1-3 elapsed=ft lineup=Y
+24 finished 06/17/2026 19:00 GHA-PAN 1-0 elapsed=finished lineup=Y

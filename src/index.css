@@ -1,0 +1,113 @@
+@import "tailwindcss";
+@import "@fontsource-variable/noto-sans";
+
+/* WC26 theme — single locked accent: pitch-green. Dual light/dark.
+   No AI-purple, off-black/off-white surfaces, one radius scale. */
+@theme {
+  --font-sans: "Noto Sans Variable", "Segoe UI", Roboto, Arial, sans-serif;
+
+  --color-pitch-50: #ecfdf5;
+  --color-pitch-100: #d1fae5;
+  --color-pitch-300: #6ee7b7;
+  --color-pitch-400: #34d399;
+  --color-pitch-500: #10b981;
+  --color-pitch-600: #059669;
+  --color-pitch-700: #047857;
+
+  --radius-card: 16px;
+
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* Theme tokens via data-theme on <html>. Light is default.
+   A single fixed photo sits behind everything; elevated surfaces are translucent
+   liquid glass that lets that one backdrop show through (so there are never two
+   image crops meeting = no seam). --bg-elev-solid stays opaque for modals etc. */
+:root {
+  --bg: #f7f8f7;
+  --bg-solid: #f7f8f7;
+  --bg-elev: rgba(255, 255, 255, 0.9);
+  --bg-elev-solid: #ffffff;
+  --bg-sunken: rgba(236, 240, 238, 0.82);
+  --border: rgba(120, 135, 126, 0.4);
+  --text: #16201b;
+  --text-muted: #4a5852;
+  --accent: var(--color-pitch-600);
+  --accent-contrast: #ffffff;
+}
+
+html[data-theme="dark"] {
+  --bg: #0c0f0d;
+  --bg-solid: #0c0f0d;
+  --bg-elev: rgba(20, 25, 22, 0.88);
+  --bg-elev-solid: #141816;
+  --bg-sunken: rgba(8, 11, 9, 0.8);
+  --border: rgba(125, 145, 132, 0.32);
+  --text: #eaf2ed;
+  --text-muted: #9babA2;
+  --accent: var(--color-pitch-400);
+  --accent-contrast: #062018;
+}
+
+/* Liquid glass (Apple-style): heavy backdrop blur + saturation boost makes the
+   one fixed photo behind glow through; a specular top highlight + hairline inner
+   stroke sell the "pane of glass". Applied to cards, tables, nav rails. */
+.glass {
+  background: var(--bg-elev);
+  backdrop-filter: blur(20px) saturate(185%);
+  -webkit-backdrop-filter: blur(20px) saturate(185%);
+}
+.glass-edge {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 0 1px var(--border),
+    0 14px 38px rgba(0, 0, 0, 0.16);
+}
+html[data-theme="dark"] .glass-edge {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 0 0 1px var(--border),
+    0 14px 38px rgba(0, 0, 0, 0.45);
+}
+
+@layer base {
+  * { border-color: var(--border); }
+  html { color-scheme: light dark; }
+  body {
+    margin: 0;
+    background: var(--bg-solid);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "mark" 1, "mkmk" 1;
+  }
+  ::selection { background: var(--accent); color: var(--accent-contrast); }
+}
+
+/* Smooth light/dark switch via the View Transitions API: the browser snapshots
+   the page and cross-fades old->new in a single GPU compositor pass, so there's
+   no per-element color animation (which thrashed and lagged). Unsupported
+   browsers just swap instantly. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.32s;
+  animation-timing-function: ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
+}
+
+/* thin scrollbars for horizontal rails */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
