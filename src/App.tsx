@@ -306,7 +306,7 @@ export default function App() {
         )}
 
         {/* ---- Primary nav (segmented pills) — tabs only, one clean row ---- */}
-        <div className="sticky top-0 z-10 -mx-4 mb-6 hidden px-4 py-2.5 sm:block">
+        <div className="sticky top-0 z-40 -mx-4 mb-6 hidden px-4 py-2.5 sm:block">
           <nav className="glass glass-edge no-scrollbar flex gap-1 overflow-x-auto rounded-full p-1" aria-label={t("mainNav")}>
             {([["schedule", t("tabSchedule")], ["groups", t("tabStandings")], ["bracket", t("tabBracket")], ["stadiums", t("tabStadiums")], ["teams", t("tabTeams")]] as const).map(
               ([key, label]) => {
@@ -702,7 +702,7 @@ export default function App() {
         </button>
       </div>
 
-      <footer className="mx-auto max-w-6xl px-4 pb-24 text-[11px] sm:pb-10" style={{ color: "var(--text)" }}>
+      <footer className="mx-auto max-w-6xl px-4 pb-24 text-[11px] sm:pb-10" style={{ color: "#fff", textShadow: "0 1px 3px rgba(0,0,0,0.6), 0 2px 12px rgba(0,0,0,0.5)" }}>
         {t("footerData")} · {lang === "vi" ? `Giờ hiển thị theo múi giờ của bạn (${TZ_LABEL})` : `Times shown in your time zone (${TZ_LABEL})`} · {t("footerRules")}
       </footer>
     </div>

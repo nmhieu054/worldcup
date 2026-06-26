@@ -292,7 +292,7 @@ export function Bracket({ matches }: { matches: Match[] }) {
               <span className="mt-1 inline-block rounded-full px-2 py-0.5 text-[10.5px] font-extrabold uppercase tracking-wide" style={{ background: "var(--accent)", color: "var(--accent-contrast)", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
                 {knockoutLabel("third", lang)}
               </span>
-              <TieCard match={third} title={knockoutLabel("third", lang)} lang={lang} />
+              <TieCard match={third} lang={lang} />
             </div>
           )}
         </div>

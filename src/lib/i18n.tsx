@@ -60,7 +60,7 @@ const DICT = {
   noMatchesDay: { vi: "Không có trận đấu nào trong hôm nay hoặc ngày được chọn.", en: "No matches today or on the selected date." },
 
   // --- footer ---
-  footerData: { vi: "Dữ liệu từ worldcup26.ir", en: "Data from worldcup26.ir" },
+  footerData: { vi: "Dữ liệu từ ESPN", en: "Data from ESPN" },
   footerRules: {
     vi: "BXH tự tính theo luật FIFA (điểm, hiệu số, bàn thắng, đối đầu).",
     en: "Standings computed by FIFA rules (points, goal difference, goals for, head-to-head).",
