@@ -1,73 +1,54 @@
-# React + TypeScript + Vite
+# ⚽ World Cup 2026 — Lineup Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Live at **[worldcup.meowbiter.me](https://worldcup.meowbiter.me)**
 
-Currently, two official plugins are available:
+A real-time FIFA World Cup 2026 lineup tracker built with React + TypeScript + Vite. Shows match schedules, confirmed lineups, group tables, bracket, and team details — data synced from ESPN and other sources.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Match Calendar** — full WC26 fixture list with kickoff times (localized)
+- **Lineups** — confirmed starting XIs per match
+- **Group Tables** — live standings with points, GD, H2H
+- **Bracket** — knockout stage progression
+- **Team Details** — rosters, player info, match history
+- **Refresh Schedule** — auto-refresh every 60s during active matches
+- **iCal Export** — add matches to your calendar
+- **PWA** — installable, offline-capable
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- **React 19** + **TypeScript 6**
+- **Vite 8** + **Tailwind CSS 4**
+- **Motion** (Framer Motion v12) — animations
+- **Phosphor Icons**
+- **Noto Sans** variable font
+- Data sync scripts in Node.js / Python
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Development
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev       # Vite dev server
+npm run build     # build with live data sync
+npm run preview   # preview production build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Data Sync Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Script | What it does |
+|--------|-------------|
+| `scripts/sync.mjs` | Master sync — runs all data fetchers |
+| `scripts/sync-espn.mjs` | Fetches fixtures, standings, lineups from ESPN |
+| `scripts/sync-rosters.mjs` | Player rosters per team |
+| `scripts/sync-lineups.mjs` | Match lineup details |
+| `scripts/sync-wiki.mjs` | Wikipedia data for teams/stadiums |
+| `scripts/sync-fifa-rank.mjs` | FIFA world rankings |
+| `scripts/build-with-live-data.mjs` | Sync + Vite build in one step |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Deploy
+
+The site is statically built and served via Cloudflare Tunnel. The `dist/` folder is the publish root — `npm run build` syncs live data and produces the output in one pass.
+
+## License
+
+MIT
