@@ -69,6 +69,18 @@ function num(v: string): number {
   return Number.isNaN(n) ? 0 : n;
 }
 
+/** Extract feeder match ids from a knockout game's placeholder labels,
+ *  e.g. "Winner Match 74" / "Loser Match 101" -> ["74"]. Group-stage
+ *  placeholders ("Winner Group A") yield nothing. */
+function parseFeeders(g: RawGame): string[] {
+  const ids: string[] = [];
+  for (const lab of [g.home_team_label, g.away_team_label]) {
+    const m = lab?.match(/Match\s+(\d+)/i);
+    if (m) ids.push(m[1]);
+  }
+  return ids;
+}
+
 // Per-knockout-round noun used when numbering pairs ("Cặp 1 Tứ kết" / "Quarter-final 1").
 const KO_PAIR_EN: Record<KnockoutType, string> = {
   r32: "Round-of-32 match",
@@ -210,6 +222,7 @@ export function buildMatches(
       group: g.group,
       status,
       timeElapsed: g.time_elapsed,
+      feeders: g.type === "group" ? [] : parseFeeders(g),
     };
   });
   matches.sort((a, b) => {

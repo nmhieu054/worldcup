@@ -124,6 +124,8 @@ export interface Match {
   group: string;
   status: MatchStatus;
   timeElapsed: string;
+  /** Knockout feeder match ids (the ties whose winners play this tie). */
+  feeders: string[];
 }
 
 export interface StandingRow {

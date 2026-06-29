@@ -95,31 +95,42 @@ function DesktopBracket({ rounds, lang }: { rounds: Round[]; lang: Lang }) {
     setEdges({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 });
   }, []);
 
-  // Draw connectors from the measured position of each box.
+  // Draw connectors from the measured position of each box, following the
+  // real feeder relationships ("Winner Match N") rather than positional index
+  // — the upstream match ids are NOT laid out as a tidy binary tree, so j*2
+  // pairing draws the wrong branches.
   const recompute = useCallback(() => {
     const root = content.current;
     if (!root) return;
     const base = root.getBoundingClientRect();
     setDims({ w: root.scrollWidth, h: root.scrollHeight });
+
+    // matchId -> card key ("ri-i") for the round that contains it.
+    const cardKeyById = new Map<string, string>();
+    rounds.forEach((round, ri) => {
+      round.ties.forEach((tie, i) => cardKeyById.set(tie.id, `${ri}-${i}`));
+    });
+
     const paths: string[] = [];
-    for (let ri = 0; ri < rounds.length - 1; ri++) {
-      const next = rounds[ri + 1];
-      for (let j = 0; j < next.ties.length; j++) {
-        const target = cards.current.get(`${ri + 1}-${j}`);
-        const top = cards.current.get(`${ri}-${j * 2}`);
-        const bot = cards.current.get(`${ri}-${j * 2 + 1}`);
-        if (!target || !top || !bot) continue;
+    for (let ri = 1; ri < rounds.length; ri++) {
+      const round = rounds[ri];
+      round.ties.forEach((tie, i) => {
+        const target = cards.current.get(`${ri}-${i}`);
+        if (!target) return;
         const tr = target.getBoundingClientRect();
         const tx = tr.left - base.left;
         const ty = tr.top - base.top + tr.height / 2;
-        for (const feeder of [top, bot]) {
+        for (const feederId of tie.feeders) {
+          const key = cardKeyById.get(feederId);
+          const feeder = key ? cards.current.get(key) : undefined;
+          if (!feeder) continue;
           const fr = feeder.getBoundingClientRect();
           const fx = fr.right - base.left;
           const fy = fr.top - base.top + fr.height / 2;
           const midX = (fx + tx) / 2;
           paths.push(`M ${fx} ${fy} H ${midX} V ${ty} H ${tx}`);
         }
-      }
+      });
     }
     setLines(paths);
   }, [rounds]);
@@ -276,6 +287,21 @@ export function Bracket({ matches }: { matches: Match[] }) {
   const rounds: Round[] = KNOCKOUT_ORDER.filter((r) => r !== "third")
     .map((type) => ({ type, label: knockoutLabel(type, lang), ties: matches.filter((m) => m.type === type) }))
     .filter((r) => r.ties.length > 0);
+
+  // Order each round so feeders sit directly above/below the tie they feed,
+  // top-to-bottom — otherwise the (correct) connectors cross awkwardly because
+  // buildMatches sorts ties by kickoff time, not by bracket position. Anchor on
+  // the last round and propagate the order backwards via the feeder chain.
+  for (let ri = rounds.length - 2; ri >= 0; ri--) {
+    const order = new Map<string, number>();
+    rounds[ri + 1].ties.forEach((tie, i) => {
+      tie.feeders.forEach((fid, k) => order.set(fid, i * 2 + k));
+    });
+    rounds[ri].ties.sort(
+      (a, b) => (order.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (order.get(b.id) ?? Number.MAX_SAFE_INTEGER)
+    );
+  }
+
   const third = matches.find((m) => m.type === "third");
 
   return (
