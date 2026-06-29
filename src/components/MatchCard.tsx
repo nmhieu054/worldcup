@@ -33,6 +33,7 @@ function Side({
   status,
   winner,
   fav,
+  detail,
 }: {
   name: string;
   flag?: string;
@@ -42,6 +43,7 @@ function Side({
   status: Match["status"];
   winner: boolean;
   fav: boolean;
+  detail?: string | null;
 }) {
   return (
     <div className="flex flex-col gap-0.5">
@@ -63,6 +65,11 @@ function Side({
             style={{ color: winner ? "var(--accent)" : "var(--text)" }}
           >
             {score}
+            {detail && winner && (
+              <span className="ml-1 text-[10px] font-extrabold uppercase" style={{ color: "var(--accent)" }}>
+                {detail === "AET" ? "ET" : detail === "pen" ? "pen" : detail}
+              </span>
+            )}
           </span>
         )}
       </div>
@@ -104,7 +111,9 @@ export function MatchCard({
   const favAway = isFavorite?.(match.awayId) ?? false;
   const savedMatch = isFavoriteMatch?.(match.id) ?? false;
   const highlight = savedMatch || favHome || favAway;
-  const statusLabel = status === "live" ? `LIVE ${match.timeElapsed}` : status === "finished" ? t("fullTime") : match.group?.toUpperCase();
+  const penTally = match.penHome != null && match.penAway != null ? ` ${match.penHome}-${match.penAway}` : "";
+  const detailLabel = match.timeDetail === "AET" ? " (ET)" : match.timeDetail === "pen" ? ` (pen${penTally})` : "";
+  const statusLabel = status === "live" ? `LIVE ${match.timeElapsed}` : status === "finished" ? `${t("fullTime")}${detailLabel}` : match.group?.toUpperCase();
   const railColor = status === "live" || highlight ? "var(--accent)" : status === "finished" ? "var(--text-muted)" : "var(--border)";
 
   return (
@@ -158,8 +167,8 @@ export function MatchCard({
       </header>
 
       <div className="flex flex-col gap-2">
-        <Side name={matchSideLabel(match, "home", lang)} flag={match.homeTeam?.flag} code={match.homeTeam?.code} score={homeScore} scorers={match.homeScorers} status={status} winner={homeWin} fav={favHome} />
-        <Side name={matchSideLabel(match, "away", lang)} flag={match.awayTeam?.flag} code={match.awayTeam?.code} score={awayScore} scorers={match.awayScorers} status={status} winner={awayWin} fav={favAway} />
+        <Side name={matchSideLabel(match, "home", lang)} flag={match.homeTeam?.flag} code={match.homeTeam?.code} score={homeScore} scorers={match.homeScorers} status={status} winner={homeWin} fav={favHome} detail={match.timeDetail} />
+        <Side name={matchSideLabel(match, "away", lang)} flag={match.awayTeam?.flag} code={match.awayTeam?.code} score={awayScore} scorers={match.awayScorers} status={status} winner={awayWin} fav={favAway} detail={match.timeDetail} />
       </div>
 
       {stadium && (

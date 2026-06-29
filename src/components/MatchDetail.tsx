@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { Match, MatchLineup, MatchCard, TeamLineup, LineupPlayer, TeamRoster, RosterPlayer } from "../lib/types";
+import type { Match, MatchLineup, MatchCard, MatchSub, TeamLineup, LineupPlayer, TeamRoster, RosterPlayer } from "../lib/types";
 import { VN_DATETIME } from "../lib/timezone";
 import { useI18n, matchSideLabel, type DictKey } from "../lib/i18n";
 
@@ -218,6 +218,25 @@ function CardRow({ card, reverse }: { card: MatchCard; reverse?: boolean }) {
   );
 }
 
+function SubRow({ sub, reverse }: { sub: MatchSub; reverse?: boolean }) {
+  return (
+    <span className={`flex items-center gap-1.5 ${reverse ? "flex-row-reverse" : ""}`}>
+      <span className="shrink-0 text-[12px]">🔄</span>
+      <span className={`flex min-w-0 flex-col ${reverse ? "items-end" : "items-start"}`}>
+        <span className="flex items-center gap-1 truncate">
+          <span style={{ color: "#2bb673" }}>▲</span>
+          <span className="truncate" style={{ color: "var(--text)" }}>{sub.in ?? "—"}</span>
+          {sub.minute ? <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>{sub.minute}</span> : null}
+        </span>
+        <span className="flex items-center gap-1 truncate text-[11px]" style={{ color: "var(--text-muted)" }}>
+          <span style={{ color: "#e8323c" }}>▼</span>
+          <span className="truncate">{sub.out ?? "—"}</span>
+        </span>
+      </span>
+    </span>
+  );
+}
+
 function TeamHeader({ label, flag, code, onOpen, reverse }: { label: string; flag?: string; code?: string; onOpen?: () => void; reverse?: boolean }) {
   return (
     <button
@@ -334,6 +353,17 @@ export function MatchDetail({
               ) : (
                 <span className="px-1 text-[12px] font-bold" style={{ color: "var(--text-muted)" }}>VS</span>
               )}
+              {match.timeDetail && match.status === "finished" && (
+                <span className="shrink-0 self-center rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide" style={{ background: "color-mix(in srgb, var(--accent) 16%, transparent)", color: "var(--accent)" }}>
+                  {match.timeDetail === "AET"
+                    ? "ET"
+                    : match.timeDetail === "pen"
+                      ? match.penHome != null && match.penAway != null
+                        ? `pen ${match.penHome}-${match.penAway}`
+                        : "pen"
+                      : match.timeDetail}
+                </span>
+              )}
             </div>
             <TeamHeader label={awayName} flag={match.awayTeam?.flag} code={match.awayTeam?.code} onOpen={match.awayId ? () => onOpenTeam?.(match.awayId!) : undefined} reverse />
           </div>
@@ -354,6 +384,19 @@ export function MatchDetail({
               </div>
               <div className="flex flex-col items-end gap-1">
                 {lineup!.cards!.filter((c) => c.side === "away").map((c, i) => <CardRow key={`a${i}`} card={c} reverse />)}
+              </div>
+            </div>
+          )}
+          {(lineup?.subs?.length ?? 0) > 0 && (
+            <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+              <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{t("subs")}</h4>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                <div className="flex flex-col gap-1.5">
+                  {lineup!.subs!.filter((s) => s.side === "home").map((s, i) => <SubRow key={`h${i}`} sub={s} />)}
+                </div>
+                <div className="flex flex-col items-end gap-1.5">
+                  {lineup!.subs!.filter((s) => s.side === "away").map((s, i) => <SubRow key={`a${i}`} sub={s} reverse />)}
+                </div>
               </div>
             </div>
           )}

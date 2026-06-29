@@ -93,6 +93,7 @@ const DICT = {
   starting: { vi: "Đội hình xuất phát", en: "Starting XI" },
   bench: { vi: "Dự bị", en: "Bench" },
   noBench: { vi: "Chưa có danh sách dự bị.", en: "No bench list yet." },
+  subs: { vi: "Thay người", en: "Substitutions" },
   updatedAt: { vi: "Cập nhật", en: "Updated" },
   lineupEmptyPrefix: { vi: "Đội hình ", en: "The " },
   lineupEmptySuffix: { vi: " chưa công bố. Khi có dữ liệu, danh sách đá chính và dự bị sẽ hiện ở đây.", en: " lineup hasn't been announced. The starting XI and bench will appear here once available." },

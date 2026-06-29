@@ -10,6 +10,7 @@ function Slot({
   score,
   win,
   decided,
+  detail,
 }: {
   name: string;
   flag?: string;
@@ -17,6 +18,7 @@ function Slot({
   score: number | null;
   win: boolean;
   decided: boolean;
+  detail?: string | null;
 }) {
   return (
     <div className="flex items-center gap-2 px-2.5 py-1.5" style={{ opacity: decided ? 1 : 0.92 }}>
@@ -31,6 +33,11 @@ function Slot({
       {score !== null && (
         <span className="tabular-nums text-[13px] font-bold" style={{ color: win ? "var(--accent)" : "var(--text)" }}>
           {score}
+          {detail && win && (
+            <span className="ml-1 text-[9px] font-extrabold uppercase" style={{ color: "var(--accent)" }}>
+              {detail === "AET" ? "ET" : detail === "pen" ? "pen" : detail}
+            </span>
+          )}
         </span>
       )}
     </div>
@@ -42,6 +49,7 @@ function TieCard({ match, title, fullWidth, cardRef, lang }: { match: Match; tit
   const homeWin = match.homeScore !== null && match.awayScore !== null && match.homeScore > match.awayScore;
   const awayWin = match.homeScore !== null && match.awayScore !== null && match.awayScore > match.homeScore;
   const live = match.status === "live";
+  const detail = match.timeDetail;
   return (
     <div className={fullWidth ? "w-full" : "w-[212px] shrink-0"}>
       {title && (
@@ -59,9 +67,9 @@ function TieCard({ match, title, fullWidth, cardRef, lang }: { match: Match; tit
         className="overflow-hidden rounded-[12px]"
         style={{ background: "var(--bg-elev-solid)", boxShadow: live ? "0 0 0 1.5px var(--accent)" : "0 0 0 1px var(--border)" }}
       >
-        <Slot name={matchSideLabel(match, "home", lang)} flag={match.homeTeam?.flag} code={match.homeTeam?.code} score={match.homeScore} win={homeWin} decided={decided} />
+        <Slot name={matchSideLabel(match, "home", lang)} flag={match.homeTeam?.flag} code={match.homeTeam?.code} score={match.homeScore} win={homeWin} decided={decided} detail={detail} />
         <div style={{ borderTop: "1px solid var(--border)" }} />
-        <Slot name={matchSideLabel(match, "away", lang)} flag={match.awayTeam?.flag} code={match.awayTeam?.code} score={match.awayScore} win={awayWin} decided={decided} />
+        <Slot name={matchSideLabel(match, "away", lang)} flag={match.awayTeam?.flag} code={match.awayTeam?.code} score={match.awayScore} win={awayWin} decided={decided} detail={detail} />
         <div className="flex items-center justify-between gap-2 px-2.5 py-1 text-[9.5px]" style={{ borderTop: "1px solid var(--border)", color: "var(--text-muted)" }}>
           <span>{match.kickoff ? VN_DATETIME.format(match.kickoff) : "TBD"}</span>
           {live && <span className="font-extrabold" style={{ color: "var(--accent)" }}>LIVE</span>}

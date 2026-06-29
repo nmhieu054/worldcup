@@ -141,11 +141,14 @@ function parseEspnEvents(rawEvents) {
       awayAbbr: away.team?.abbreviation || "",
       homeScore: home.score ?? 0,
       awayScore: away.score ?? 0,
+      homeShootout: home.shootoutScore,
+      awayShootout: away.shootoutScore,
       homeWinner: home.winner ?? false,
       awayWinner: away.winner ?? false,
       state: st.state,
       completed: st.completed === true,
       detail: st.detail || st.shortDetail || null,
+      shortDetail: st.shortDetail || st.detail || null,
       clock: comp.status?.displayClock || null,
     };
   }).filter(Boolean);
@@ -306,6 +309,19 @@ function overlayEspn(game, ev) {
   if (ev.state === "post") {
     game.finished = "TRUE";
     game.time_elapsed = "finished";
+    // Encode ET/penalty detail from ESPN shortDetail
+    const sd = String(ev.shortDetail ?? "").toUpperCase();
+    if (sd.includes("PEN")) {
+      game.time_detail = "pen";
+      game.pen_winner_side = ev.homeWinner ? "home" : ev.awayWinner ? "away" : undefined;
+      // Penalty shootout tally (e.g. 4-2). Undefined when ESPN hasn't published it.
+      game.pen_home = ev.homeShootout != null ? String(ev.homeShootout) : undefined;
+      game.pen_away = ev.awayShootout != null ? String(ev.awayShootout) : undefined;
+    } else if (sd.includes("AET") || sd.includes("ET") || sd.includes("EXTRA")) {
+      game.time_detail = "AET";
+    } else {
+      game.time_detail = undefined;
+    }
   } else if (ev.state === "in") {
     game.finished = "FALSE";
     game.time_elapsed = ev.clock || "live";

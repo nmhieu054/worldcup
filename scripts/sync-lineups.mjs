@@ -213,6 +213,22 @@ function extractCards(summary, homeTeamId, awayTeamId) {
   return cards;
 }
 
+/** Pull substitutions out of ESPN keyEvents. ESPN convention: participants[0]
+ *  comes on, participants[1] goes off ("X replaces Y"). Mapped to home/away by team id. */
+function extractSubs(summary, homeTeamId, awayTeamId) {
+  const subs = [];
+  for (const ev of summary.keyEvents ?? []) {
+    if (ev.type?.type !== "substitution") continue;
+    const tid = String(ev.team?.id ?? "");
+    const side = tid === String(homeTeamId) ? "home" : tid === String(awayTeamId) ? "away" : null;
+    if (!side) continue;
+    const inName = ev.participants?.[0]?.athlete?.displayName || undefined;
+    const outName = ev.participants?.[1]?.athlete?.displayName || undefined;
+    subs.push({ in: inName, out: outName, minute: ev.clock?.displayValue || undefined, side });
+  }
+  return subs;
+}
+
 /** Pull goals out of ESPN keyEvents, mapped to home/away by team id.
  *  Returns { home: ["Name 9'", ...], away: [...] }. */
 function extractGoals(summary, homeTeamId, awayTeamId) {
@@ -307,6 +323,7 @@ async function main() {
       const awayLineup = extractTeamLineup(awaySide);
       const cards = extractCards(summary, homeSide?.team?.id, awaySide?.team?.id);
       const goals = extractGoals(summary, homeSide?.team?.id, awaySide?.team?.id);
+      const subs = extractSubs(summary, homeSide?.team?.id, awaySide?.team?.id);
       // Patch scorers from summary keyEvents (more accurate than the main feed).
       // Always overwrite both sides while ESPN owns the live/post score, even
       // when one side has zero goals. Otherwise a stale scorer from the base
@@ -325,6 +342,7 @@ async function main() {
           home: homeLineup,
           away: awayLineup,
           cards,
+          subs,
         });
         console.log(`[lineups] game ${g.id} ${code(home)} vs ${code(away)}: XI ${homeLineup.starting.length}/${awayLineup.starting.length}, cards ${cards.length}`);
       } else {

@@ -62,12 +62,13 @@ function StatusChip({ match }: { match: Match }) {
     );
   }
   if (match.status === "finished") {
+    const detail = match.timeDetail === "AET" ? "ET" : match.timeDetail === "pen" ? "pen" : "FT";
     return (
       <span
         className="inline-block rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide"
         style={{ background: "var(--bg-sunken)", color: "var(--text-muted)" }}
       >
-        FT
+        {detail}
       </span>
     );
   }
@@ -107,7 +108,8 @@ function RowWithDay({
   const favAway = isFavorite?.(match.awayId) ?? false;
   const saved = isFavoriteMatch?.(match.id) ?? false;
   const highlight = saved || favHome || favAway;
-  const score = homeScore !== null && awayScore !== null ? `${homeScore}-${awayScore}` : null;
+  const penTally = match.penHome != null && match.penAway != null ? ` (${match.penHome}-${match.penAway} pen)` : "";
+  const score = homeScore !== null && awayScore !== null ? `${homeScore}-${awayScore}${penTally}` : null;
   const finished = status === "finished";
 
   const [hover, setHover] = useState(false);

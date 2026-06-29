@@ -48,6 +48,13 @@ export interface RawGame {
   type: KnockoutType | "group";
   home_team_label?: string;
   away_team_label?: string;
+  /** ET/penalty detail: "AET" (after extra time), "pen" (penalty shootout) */
+  time_detail?: string;
+  /** Penalty winner side ("home" | "away") */
+  pen_winner_side?: string;
+  /** Penalty shootout tally, e.g. "4" / "2" */
+  pen_home?: string;
+  pen_away?: string;
 }
 
 export interface RawStadium {
@@ -126,6 +133,11 @@ export interface Match {
   timeElapsed: string;
   /** Knockout feeder match ids (the ties whose winners play this tie). */
   feeders: string[];
+  /** ET/penalty detail: null (regular time), "AET", or "pen" */
+  timeDetail: string | null;
+  /** Penalty shootout tally (only when timeDetail === "pen"), else null */
+  penHome: number | null;
+  penAway: number | null;
 }
 
 export interface StandingRow {
@@ -178,12 +190,20 @@ export interface MatchCard {
   side: "home" | "away";
 }
 
+export interface MatchSub {
+  in?: string; // player coming on
+  out?: string; // player going off
+  minute?: string;
+  side: "home" | "away";
+}
+
 export interface MatchLineup {
   matchId: string;
   updatedAt?: string;
   home?: TeamLineup;
   away?: TeamLineup;
   cards?: MatchCard[];
+  subs?: MatchSub[];
 }
 
 export interface RosterPlayer extends LineupPlayer {

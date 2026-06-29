@@ -223,6 +223,9 @@ export function buildMatches(
       status,
       timeElapsed: g.time_elapsed,
       feeders: g.type === "group" ? [] : parseFeeders(g),
+      timeDetail: g.time_detail ?? null,
+      penHome: g.pen_home != null && g.pen_home !== "" ? Number(g.pen_home) : null,
+      penAway: g.pen_away != null && g.pen_away !== "" ? Number(g.pen_away) : null,
     };
   });
   matches.sort((a, b) => {
