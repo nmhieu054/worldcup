@@ -85,6 +85,7 @@ const DICT = {
   noTies: { vi: "Chưa có cặp đấu.", en: "No fixtures yet." },
   matchesWord: { vi: "trận", en: "matches" },  closeMatch: { vi: "Đóng thông tin trận", en: "Close match details" },
   noGoals: { vi: "Không có bàn thắng", en: "No goals" },
+  wonOnPens: { vi: "thắng luân lưu", en: "won on penalties" },
   lineupsBench: { vi: "Đội hình ra sân & dự bị", en: "Lineups & bench" },
   lineupsHint: {
     vi: "Sẽ tự hiện khi nguồn dữ liệu công bố lineup trước trận.",

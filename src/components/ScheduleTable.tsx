@@ -45,10 +45,23 @@ function scorerPreview(scorers: string[], max = 2) {
 /* Status chip: LIVE (red, pulsing) / FT (finished) / kickoff time (upcoming). */
 function StatusChip({ match }: { match: Match }) {
   if (match.status === "live") {
+    // Penalty shootout: show "pen" badge instead of elapsed time
+    if (match.timeDetail === "pen") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white"
+          style={{ background: "#e8323c" }}
+        >
+          <span className="size-1.5 rounded-full animate-pulse-soft bg-white" />
+          PEN
+        </span>
+      );
+    }
     const elapsed = (match.timeElapsed || "").trim();
     // Only use the feed string as a minute label when it actually looks like
     // match time (has a digit, or HT/ET). State words like "finished"/"ft"/
     // "notstarted" must not be shown literally — fall back to "LIVE".
+    // Extra time shows clock (e.g. "105'" or "120'") — no special badge.
     const isMinute = /\d/.test(elapsed) || /^(ht|et)$/i.test(elapsed);
     const label = isMinute ? elapsed : "LIVE";
     return (
@@ -62,7 +75,7 @@ function StatusChip({ match }: { match: Match }) {
     );
   }
   if (match.status === "finished") {
-    const detail = match.timeDetail === "AET" ? "ET" : match.timeDetail === "pen" ? "pen" : "FT";
+    const detail = match.timeDetail === "AET" ? "ET" : match.timeDetail === "pen" ? "PEN" : "FT";
     return (
       <span
         className="inline-block rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide"
@@ -108,8 +121,8 @@ function RowWithDay({
   const favAway = isFavorite?.(match.awayId) ?? false;
   const saved = isFavoriteMatch?.(match.id) ?? false;
   const highlight = saved || favHome || favAway;
-  const penTally = match.penHome != null && match.penAway != null ? ` (${match.penHome}-${match.penAway} pen)` : "";
-  const score = homeScore !== null && awayScore !== null ? `${homeScore}-${awayScore}${penTally}` : null;
+  const penLine = match.timeDetail === "pen" && match.penHome != null && match.penAway != null ? `${match.penHome}-${match.penAway}` : null;
+  const score = homeScore !== null && awayScore !== null ? `${homeScore}-${awayScore}` : null;
   const finished = status === "finished";
 
   const [hover, setHover] = useState(false);
@@ -192,6 +205,9 @@ function RowWithDay({
             <span className="tabular-nums text-[14px] font-extrabold" style={{ color: "var(--accent)" }}>{score}</span>
           ) : (
             <span className="text-[11px] font-bold" style={{ color: "var(--text-muted)" }}>vs</span>
+          )}
+          {penLine && (
+            <span className="whitespace-nowrap tabular-nums text-[12px] font-extrabold leading-none" style={{ color: "var(--accent)" }}>{penLine}</span>
           )}
           <StatusChip match={match} />
         </div>

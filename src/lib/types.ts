@@ -138,6 +138,8 @@ export interface Match {
   /** Penalty shootout tally (only when timeDetail === "pen"), else null */
   penHome: number | null;
   penAway: number | null;
+  /** Which side won the shootout: "home" | "away" | null */
+  penWinnerSide: "home" | "away" | null;
 }
 
 export interface StandingRow {

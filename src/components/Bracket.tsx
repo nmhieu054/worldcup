@@ -35,7 +35,7 @@ function Slot({
           {score}
           {detail && win && (
             <span className="ml-1 text-[9px] font-extrabold uppercase" style={{ color: "var(--accent)" }}>
-              {detail === "AET" ? "ET" : detail === "pen" ? "pen" : detail}
+              {detail === "AET" ? "ET" : detail === "pen" ? "PEN" : detail}
             </span>
           )}
         </span>
@@ -71,8 +71,8 @@ function TieCard({ match, title, fullWidth, cardRef, lang }: { match: Match; tit
         <div style={{ borderTop: "1px solid var(--border)" }} />
         <Slot name={matchSideLabel(match, "away", lang)} flag={match.awayTeam?.flag} code={match.awayTeam?.code} score={match.awayScore} win={awayWin} decided={decided} detail={detail} />
         <div className="flex items-center justify-between gap-2 px-2.5 py-1 text-[9.5px]" style={{ borderTop: "1px solid var(--border)", color: "var(--text-muted)" }}>
-          <span>{match.kickoff ? VN_DATETIME.format(match.kickoff) : "TBD"}</span>
-          {live && <span className="font-extrabold" style={{ color: "var(--accent)" }}>LIVE</span>}
+          <span>{live && match.timeDetail === "pen" ? "PEN" : (match.kickoff ? VN_DATETIME.format(match.kickoff) : "TBD")}</span>
+          {live && <span className="font-extrabold uppercase" style={{ color: "var(--accent)" }}>{detail === "pen" ? "PEN" : "LIVE"}</span>}
         </div>
       </div>
     </div>

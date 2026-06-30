@@ -359,14 +359,22 @@ export function MatchDetail({
                     ? "ET"
                     : match.timeDetail === "pen"
                       ? match.penHome != null && match.penAway != null
-                        ? `pen ${match.penHome}-${match.penAway}`
-                        : "pen"
+                        ? `PEN ${match.penHome}-${match.penAway}`
+                        : "PEN"
                       : match.timeDetail}
                 </span>
               )}
             </div>
             <TeamHeader label={awayName} flag={match.awayTeam?.flag} code={match.awayTeam?.code} onOpen={match.awayId ? () => onOpenTeam?.(match.awayId!) : undefined} reverse />
           </div>
+          {match.timeDetail === "pen" && match.status === "finished" && match.penWinnerSide && (
+            <div className="mt-2 text-center text-[12px] font-semibold" style={{ color: "var(--accent)" }}>
+              🏆 {match.penWinnerSide === "home" ? homeName : awayName} {t("wonOnPens")}
+              {match.penHome != null && match.penAway != null
+                ? ` ${Math.max(match.penHome, match.penAway)}-${Math.min(match.penHome, match.penAway)}`
+                : ""}
+            </div>
+          )}
           {(match.homeScorers.length > 0 || match.awayScorers.length > 0) && (
             <div className="mt-4 grid grid-cols-2 gap-2 text-[12px]" style={{ color: "var(--text-muted)" }}>
               <div className="flex flex-col gap-1">

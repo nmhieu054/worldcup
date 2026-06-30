@@ -150,6 +150,7 @@ function parseEspnEvents(rawEvents) {
       detail: st.detail || st.shortDetail || null,
       shortDetail: st.shortDetail || st.detail || null,
       clock: comp.status?.displayClock || null,
+      period: comp.status?.period ?? null,
     };
   }).filter(Boolean);
 }
@@ -325,6 +326,15 @@ function overlayEspn(game, ev) {
   } else if (ev.state === "in") {
     game.finished = "FALSE";
     game.time_elapsed = ev.clock || "live";
+    // Live period-based detection: period 5+ = penalty shootout, 3-4 = extra time
+    if (ev.period != null && ev.period >= 5) {
+      game.time_detail = "pen";
+    } else if (ev.period != null && ev.period >= 3) {
+      game.time_detail = "AET";
+    } else {
+      // Don't clobber existing time_detail (e.g. from a prior sync cycle)
+      // when the match was already in pen/ET but period dropped back
+    }
   } else {
     // Upcoming
     game.finished = "FALSE";

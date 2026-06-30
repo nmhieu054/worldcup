@@ -67,7 +67,7 @@ function Side({
             {score}
             {detail && winner && (
               <span className="ml-1 text-[10px] font-extrabold uppercase" style={{ color: "var(--accent)" }}>
-                {detail === "AET" ? "ET" : detail === "pen" ? "pen" : detail}
+                {detail === "AET" ? "ET" : detail === "pen" ? "PEN" : detail}
               </span>
             )}
           </span>
@@ -112,8 +112,10 @@ export function MatchCard({
   const savedMatch = isFavoriteMatch?.(match.id) ?? false;
   const highlight = savedMatch || favHome || favAway;
   const penTally = match.penHome != null && match.penAway != null ? ` ${match.penHome}-${match.penAway}` : "";
-  const detailLabel = match.timeDetail === "AET" ? " (ET)" : match.timeDetail === "pen" ? ` (pen${penTally})` : "";
-  const statusLabel = status === "live" ? `LIVE ${match.timeElapsed}` : status === "finished" ? `${t("fullTime")}${detailLabel}` : match.group?.toUpperCase();
+  const detailLabel = match.timeDetail === "AET" ? " (ET)" : match.timeDetail === "pen" ? ` (PEN${penTally})` : "";
+  // Penalty shootout: show "pen" badge instead of elapsed time
+  const liveLabel = status === "live" && match.timeDetail === "pen" ? "PEN" : status === "live" ? `LIVE ${match.timeElapsed}` : null;
+  const statusLabel = liveLabel ?? (status === "finished" ? `${t("fullTime")}${detailLabel}` : match.group?.toUpperCase());
   const railColor = status === "live" || highlight ? "var(--accent)" : status === "finished" ? "var(--text-muted)" : "var(--border)";
 
   return (

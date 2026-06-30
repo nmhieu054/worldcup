@@ -39,8 +39,9 @@ export function Countdown({ match, favorite }: { match: Match | null; favorite?:
   // Show the elapsed minute when the feed provides real match time (e.g. "45'",
   // HT, ET). State words like "finished"/"ft"/"notstarted" are NOT minutes —
   // show "LIVE" instead so we never print a status word as the clock.
+  // Penalty shootout: show "pen" label instead.
   const elapsed = (match.timeElapsed || "").trim();
-  const liveLabel = /\d/.test(elapsed) || /^(ht|et)$/i.test(elapsed) ? elapsed : "LIVE";
+  const liveLabel = match.timeDetail === "pen" ? "PEN" : (/\d/.test(elapsed) || /^(ht|et)$/i.test(elapsed) ? elapsed : "LIVE");
 
   return (
     <div

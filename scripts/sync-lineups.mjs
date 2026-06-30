@@ -135,36 +135,46 @@ async function writeAtomic(file, data) {
 
 function code(team) { return String(team?.fifa_code ?? team ?? "").toUpperCase(); }
 
-/** Build ESPN event index for the needed dates: `${date}|${home}|${away}` -> eventId. */
+/** Build ESPN event index for the needed dates.
+ *  Returns { byCode: Map(`${home}|${away}` -> info), all: [info...] sorted by date }.
+ *  byCode handles group + confirmed-team games; `all` lets knockout placeholders
+ *  (no FIFA code yet) match by kickoff date, mirroring sync-espn's Phase 2. */
 async function buildEspnIndex(dateKeys) {
-  const index = new Map();
+  const byCode = new Map();
+  const all = [];
+  const seen = new Set();
   for (const date of dateKeys) {
     try {
       const sb = await pull(`${ESPN}/scoreboard?dates=${date}`);
       for (const e of sb.events ?? []) {
+        if (seen.has(e.id)) continue;
         const comp = e.competitions?.[0];
         if (!comp) continue;
         const home = comp.competitors?.find((c) => c.homeAway === "home");
         const away = comp.competitors?.find((c) => c.homeAway === "away");
         const hc = code(home?.team?.abbreviation);
         const ac = code(away?.team?.abbreviation);
-        if (!hc || !ac) continue;
         const st = comp.status ?? e.status ?? {};
-        index.set(`${hc}|${ac}`, {
+        const info = {
           eventId: e.id,
+          date: e.date,
           homeScore: home?.score,
           awayScore: away?.score,
           state: st.type?.state, // "pre" | "in" | "post"
           completed: st.type?.completed === true,
           clock: st.displayClock || st.type?.shortDetail || undefined,
-        });
+        };
+        seen.add(e.id);
+        all.push(info);
+        if (hc && ac) byCode.set(`${hc}|${ac}`, info);
       }
     } catch (err) {
       console.warn(`[lineups] scoreboard ${date} failed: ${err.message}`);
     }
     await sleep(120);
   }
-  return index;
+  all.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  return { byCode, all };
 }
 
 function simplifyEntry(entry) {
@@ -257,17 +267,22 @@ async function main() {
   const now = Date.now();
 
   // Pick games inside the kickoff window OR already flagged live by the main sync.
+  // Knockout games carry placeholder team ids ("0") until teams are confirmed, so
+  // they have no FIFA code to match on — we tag them and resolve by date later.
   const inWindow = [];
   for (const g of snap.games ?? []) {
     const home = g.home_team_id !== "0" ? teamById.get(g.home_team_id) : null;
     const away = g.away_team_id !== "0" ? teamById.get(g.away_team_id) : null;
-    if (!home || !away) continue; // knockout placeholders: no fixed teams yet
+    const isKnockout = g.type !== "group";
+    // Group games need both teams resolved; knockout placeholders are allowed
+    // through (matched by date) but real knockout teams still use FIFA codes.
+    if (!isKnockout && (!home || !away)) continue;
     const kickoff = parseKickoff(g.local_date, g.stadium_id);
     if (!kickoff) continue;
     const live = g.finished !== "TRUE" && g.time_elapsed && !["notstarted", "ft"].includes(g.time_elapsed.toLowerCase());
     const mins = (now - kickoff.getTime()) / 60000; // minutes since kickoff
     if (live || (mins >= -PRE_MIN && mins <= POST_MIN)) {
-      inWindow.push({ g, home, away, kickoff });
+      inWindow.push({ g, home, away, kickoff, byDate: !home || !away });
     }
   }
 
@@ -282,7 +297,28 @@ async function main() {
   }
 
   const dateKeys = [...new Set(inWindow.flatMap(({ kickoff }) => espnDateKeys(kickoff)))];
-  const index = await buildEspnIndex(dateKeys);
+  const { byCode, all: allEspn } = await buildEspnIndex(dateKeys);
+
+  // Resolve each in-window game to an ESPN event:
+  //  - teams known   -> match by FIFA code (exact, robust)
+  //  - placeholder KO -> match by nearest kickoff date (<= 3h), each event used once
+  const usedEvents = new Set(); // events already claimed by a FIFA-code match
+  for (const w of inWindow) {
+    if (!w.byDate) {
+      const info = byCode.get(`${code(w.home)}|${code(w.away)}`);
+      if (info) { w.espn = info; usedEvents.add(info.eventId); }
+    }
+  }
+  for (const w of inWindow) {
+    if (w.espn || !w.byDate) continue;
+    let best = null, bestDiff = Infinity;
+    for (const info of allEspn) {
+      if (usedEvents.has(info.eventId) || !info.date) continue;
+      const diff = Math.abs(new Date(info.date).getTime() - w.kickoff.getTime());
+      if (diff < bestDiff) { bestDiff = diff; best = info; }
+    }
+    if (best && bestDiff <= 3 * 3600000) { w.espn = best; usedEvents.add(best.eventId); }
+  }
 
   const lineups = [];
   // Score/status/scorer patches keyed by game id. ESPN is more reliable + faster
@@ -290,10 +326,10 @@ async function main() {
   // override the main feed (which sometimes lags badly). When ESPN has no data
   // (state "pre" / no event) we leave the worldcup26.ir values untouched.
   const gamePatch = new Map();
-  for (const { g, home, away } of inWindow) {
-    const espn = index.get(`${code(home)}|${code(away)}`);
+  for (const { g, home, away, espn } of inWindow) {
+    const label = home && away ? `${code(home)} vs ${code(away)}` : `KO ${g.type} (${g.home_team_label ?? "?"} vs ${g.away_team_label ?? "?"})`;
     if (!espn?.eventId) {
-      console.warn(`[lineups] no ESPN event for ${code(home)} vs ${code(away)} (game ${g.id})`);
+      console.warn(`[lineups] no ESPN event for ${label} (game ${g.id})`);
       continue;
     }
     const eventId = espn.eventId;
@@ -332,6 +368,19 @@ async function main() {
         const patch = gamePatch.get(g.id) ?? {};
         patch.home_scorers = goals.home.join(", ");
         patch.away_scorers = goals.away.join(", ");
+        // Derive the score from the same summary goal events as the scorers, so
+        // the displayed score never lags behind a just-shown scorer. ESPN's
+        // scoreboard score can trail its summary keyEvents by ~1 min; counting
+        // goals here keeps score + scorers in lockstep. Own goals are counted by
+        // crediting the benefiting side (handled in extractGoals' side mapping).
+        // Only bump UP toward the summary count to avoid a scoreboard that is
+        // briefly ahead (penalty shootout aggregate) dragging the score down.
+        const summaryHome = goals.home.length;
+        const summaryAway = goals.away.length;
+        const sbHome = espn.homeScore != null ? Number(espn.homeScore) : -1;
+        const sbAway = espn.awayScore != null ? Number(espn.awayScore) : -1;
+        patch.home_score = String(Math.max(summaryHome, sbHome, 0));
+        patch.away_score = String(Math.max(summaryAway, sbAway, 0));
         gamePatch.set(g.id, patch);
       }
       // Only record lineup if at least one side has a published XI.
@@ -344,9 +393,9 @@ async function main() {
           cards,
           subs,
         });
-        console.log(`[lineups] game ${g.id} ${code(home)} vs ${code(away)}: XI ${homeLineup.starting.length}/${awayLineup.starting.length}, cards ${cards.length}`);
+        console.log(`[lineups] game ${g.id} ${label}: XI ${homeLineup.starting.length}/${awayLineup.starting.length}, cards ${cards.length}`);
       } else {
-        console.log(`[lineups] game ${g.id} ${code(home)} vs ${code(away)}: lineup not published yet`);
+        console.log(`[lineups] game ${g.id} ${label}: lineup not published yet`);
       }
     } catch (err) {
       console.warn(`[lineups] summary ${eventId} failed: ${err.message}`);

@@ -22,6 +22,7 @@ const OUT = resolve(OUT_DIR, "lineups.json");
 // game id (our wc26.json) -> ESPN event id. Extend as knockout matches play.
 const EVENT_MAP = {
   "73": "760486", // R32: Runner-up A (South Africa) vs Runner-up B (Canada)
+  "76": "760487", // R32: Winner C (Brazil) vs Runner-up F (Japan)
 };
 
 async function pull(url) {

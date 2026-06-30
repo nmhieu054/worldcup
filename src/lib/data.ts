@@ -226,6 +226,7 @@ export function buildMatches(
       timeDetail: g.time_detail ?? null,
       penHome: g.pen_home != null && g.pen_home !== "" ? Number(g.pen_home) : null,
       penAway: g.pen_away != null && g.pen_away !== "" ? Number(g.pen_away) : null,
+      penWinnerSide: g.pen_winner_side === "home" || g.pen_winner_side === "away" ? g.pen_winner_side : null,
     };
   });
   matches.sort((a, b) => {
@@ -234,7 +235,59 @@ export function buildMatches(
     if (ta !== tb) return ta - tb;
     return num(a.id) - num(b.id);
   });
+  propagateKnockoutWinners(matches);
   return matches;
+}
+
+/** Decide the winning side of a finished knockout match.
+ *  Regulation/ET: higher score wins. Draw decided by shootout: penWinnerSide.
+ *  Returns null if not finished or genuinely undecided. */
+function winnerSide(m: Match): "home" | "away" | null {
+  if (m.status !== "finished" || m.homeScore == null || m.awayScore == null) return null;
+  if (m.homeScore > m.awayScore) return "home";
+  if (m.awayScore > m.homeScore) return "away";
+  return m.penWinnerSide; // draw -> shootout decides (null if unknown)
+}
+
+/** Fill knockout slots (R16 onward) with the actual winner of each feeder match
+ *  once it has finished. The bracket only seeds R32 from group standings; later
+ *  rounds carry "Winner Match N" placeholders. We walk feeders and copy the
+ *  winning team into the dependent slot, iterating so winners cascade through
+ *  every subsequent round (R16 -> QF -> SF -> Final). */
+function propagateKnockoutWinners(matches: Match[]): void {
+  const byId = new Map(matches.map((m) => [m.id, m]));
+  // A few passes are enough (max bracket depth ~5); guard with a fixed cap.
+  for (let pass = 0; pass < 8; pass++) {
+    let changed = false;
+    for (const m of matches) {
+      if (m.type === "group" || m.feeders.length === 0) continue;
+      // feeders[0] -> home slot, feeders[1] -> away slot (parseFeeders order).
+      const sides: ["home" | "away", string | undefined][] = [
+        ["home", m.feeders[0]],
+        ["away", m.feeders[1]],
+      ];
+      for (const [side, feederId] of sides) {
+        if (!feederId) continue;
+        const hasTeam = side === "home" ? m.homeTeam : m.awayTeam;
+        if (hasTeam) continue; // already resolved
+        const feeder = byId.get(feederId);
+        if (!feeder) continue;
+        const w = winnerSide(feeder);
+        if (!w) continue;
+        const team = w === "home" ? feeder.homeTeam : feeder.awayTeam;
+        if (!team) continue;
+        if (side === "home") {
+          m.homeTeam = team; m.homeId = team.id;
+          m.homeLabel = team.name; m.homeLabelEn = team.name;
+        } else {
+          m.awayTeam = team; m.awayId = team.id;
+          m.awayLabel = team.name; m.awayLabelEn = team.name;
+        }
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
 }
 
 /** Compute group standings FROM finished match results (not the API's
