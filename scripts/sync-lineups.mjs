@@ -366,8 +366,18 @@ async function main() {
       // source can survive beside a 0 score (e.g. 1-0 with an away scorer).
       if (espn.state === "in" || espn.state === "post") {
         const patch = gamePatch.get(g.id) ?? {};
-        patch.home_scorers = goals.home.join(", ");
-        patch.away_scorers = goals.away.join(", ");
+        // Only overwrite scorers when the summary actually returned goal data.
+        // Guard: if scoreboard shows goals (total > 0) but summary has zero
+        // total, the summary fetch likely returned incomplete keyEvents (transient
+        // API blip). Preserving the existing scorer data avoids a "disappear then
+        // reappear" flicker every sync cycle. Genuine 0-0 matches are harmless to
+        // overwrite because there's no scorer to lose.
+        const summaryTotal = goals.home.length + goals.away.length;
+        const sbTotal = (espn.homeScore != null ? Number(espn.homeScore) : 0) + (espn.awayScore != null ? Number(espn.awayScore) : 0);
+        if (summaryTotal > 0 || sbTotal === 0) {
+          patch.home_scorers = goals.home.join(", ");
+          patch.away_scorers = goals.away.join(", ");
+        }
         // Derive the score from the same summary goal events as the scorers, so
         // the displayed score never lags behind a just-shown scorer. ESPN's
         // scoreboard score can trail its summary keyEvents by ~1 min; counting
@@ -412,7 +422,7 @@ async function main() {
       if (p) { Object.assign(g, p); patched++; }
     }
     try {
-      await writeFile(WC26, JSON.stringify(snap), "utf8");
+      await writeAtomic(WC26, JSON.stringify(snap));
       console.log(`[lineups] patched ${patched} game(s) in wc26.json from ESPN`);
     } catch (err) {
       console.warn(`[lineups] wc26.json patch write failed: ${err.message}`);

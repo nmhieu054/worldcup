@@ -162,9 +162,13 @@ async function main() {
       }
 
       // Patch scorers + ET/penalty into wc26.json (knockout games often lack these in the base feed).
+      // Only overwrite scorers when the summary actually has goal data, to avoid
+      // clearing them if the ESPN API returns empty keyEvents transiently.
+      const goalsHome = goals.home.join(", ");
+      const goalsAway = goals.away.join(", ");
       gamePatch.set(gameId, {
-        home_scorers: goals.home.join(", "),
-        away_scorers: goals.away.join(", "),
+        home_scorers: goals.home.length > 0 ? goalsHome : undefined,
+        away_scorers: goals.away.length > 0 ? goalsAway : undefined,
         ...detailPatch,
       });
     } catch (err) {
@@ -178,8 +182,8 @@ async function main() {
       const p = gamePatch.get(g.id);
       if (p) { Object.assign(g, p); patched++; }
     }
-    await writeFile(WC26, JSON.stringify(snap), "utf8");
-    console.log(`[backfill] patched ${patched} game(s) in wc26.json`);
+    await writeAtomic(WC26, JSON.stringify(snap));
+      console.log(`[backfill] patched ${patched} game(s) in wc26.json`);
   }
 
   await mkdir(dirname(OUT), { recursive: true });

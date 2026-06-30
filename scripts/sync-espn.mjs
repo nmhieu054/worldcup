@@ -242,7 +242,7 @@ async function main() {
         game.home_score = prior.home_score;
         game.away_score = prior.away_score;
       }
-      if ((!game.home_scorers || game.home_scorers === "null") && prior.home_scorers) {
+      if ((!game.home_scorers || game.home_scorers === "null") && (prior.home_scorers || prior.away_scorers)) {
         game.home_scorers = prior.home_scorers;
         game.away_scorers = prior.away_scorers;
       }
