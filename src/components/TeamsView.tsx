@@ -89,17 +89,18 @@ export function TeamsView({
   onOpenTeam: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<"name" | "rank">("name");
+  const [sort, setSort] = useState<"name" | "rank">("rank");
   const { t } = useI18n();
 
   const sorted = useMemo(() => {
     const byName = (a: Team, b: Team) => a.name.localeCompare(b.name);
     const byRank = (a: Team, b: Team) => {
-      const ra = wiki.get(a.id)?.fifaRank ?? Infinity;
-      const rb = wiki.get(b.id)?.fifaRank ?? Infinity;
+      const ra = wiki.get(a.id)?.fifaLiveRank ?? Infinity;
+      const rb = wiki.get(b.id)?.fifaLiveRank ?? Infinity;
       return ra - rb || byName(a, b);
     };
-    const list = [...teams].sort(sort === "rank" ? byRank : byName);
+    const sortFn = sort === "rank" ? byRank : byName;
+    const list = [...teams].sort(sortFn);
     const q = query.trim().toLowerCase();
     if (!q) return list;
     return list.filter(
@@ -122,7 +123,7 @@ export function TeamsView({
         </div>
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <div className="flex shrink-0 gap-1 rounded-full p-1" style={{ background: "var(--bg-sunken)", boxShadow: "0 0 0 1px var(--border)" }}>
-            {([["name", "A→Z"], ["rank", t("fifaRank")]] as const).map(([key, label]) => (
+            {([["rank", t("fifaRank")], ["name", "A→Z"]] as const).map(([key, label]) => (
               <button
                 key={key}
                 onClick={() => setSort(key)}
@@ -157,7 +158,7 @@ export function TeamsView({
             <TeamCard
               key={team.id}
               team={team}
-              fifaRank={wiki.get(team.id)?.fifaRank}
+              fifaRank={wiki.get(team.id)?.fifaLiveRank}
               fav={isFavorite(team.id)}
               onToggleFav={() => onToggleFavorite(team.id)}
               onOpen={() => onOpenTeam(team.id)}

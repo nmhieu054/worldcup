@@ -239,4 +239,8 @@ export interface TeamWiki {
   fifaPoints?: number;
   fifaMove?: number;
   fifaUpdated?: string;
+  fifaLiveRank?: number;
+  fifaLivePoints?: number;
+  fifaLiveMove?: number;
+  fifaLiveUpdated?: string;
 }

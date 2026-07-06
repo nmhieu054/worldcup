@@ -236,10 +236,10 @@ export function TeamDetail({
                 {/* wiki params */}
                 <div className="rounded-[16px] p-4" style={{ background: "var(--bg-elev)", boxShadow: "0 0 0 1px var(--border)" }}>
                   <h3 className="mb-2 text-[11px] font-extrabold uppercase tracking-wide" style={{ color: "var(--accent)" }}>{t("teamStats")}</h3>
-                  {wiki?.fifaRank !== undefined && (
+                  {wiki?.fifaLiveRank !== undefined && (
                     <WikiRow
                       label={t("fifaRank")}
-                      value={`#${wiki.fifaRank}${wiki.fifaPoints !== undefined ? ` · ${wiki.fifaPoints.toFixed(0)} ${t("ptsWord")}` : ""}`}
+                      value={`#${wiki.fifaLiveRank}${wiki.fifaLivePoints !== undefined ? ` · ${wiki.fifaLivePoints.toFixed(0)} ${t("ptsWord")}` : ""}`}
                     />
                   )}
                   {wiki?.confederation && <WikiRow label={t("confederation")} value={wiki.confederation} />}
@@ -247,9 +247,11 @@ export function TeamDetail({
                   {standing && <WikiRow label={t("pointsGd")} value={`${standing.points} · ${standing.gd > 0 ? `+${standing.gd}` : standing.gd}`} />}
                   <WikiRow label={t("registered")} value={roster ? `${roster.players.length}` : "—"} />
                   <p className="mt-3 rounded-[10px] px-3 py-2 text-[11px] leading-relaxed" style={{ background: "var(--bg-sunken)", color: "var(--text-muted)" }}>
-                    {wiki?.fifaUpdated
-                      ? (lang === "vi" ? `Hạng FIFA cập nhật ${wiki.fifaUpdated} (nguồn FIFA/Coca-Cola). Thành tích chi tiết tại giải sẽ cập nhật theo dữ liệu hệ thống.` : `FIFA rank updated ${wiki.fifaUpdated} (source: FIFA/Coca-Cola). Detailed tournament stats will update from system data.`)
-                      : t("teamStatsHint")}
+                    {wiki?.fifaLiveUpdated
+                      ? (lang === "vi" ? `Hạng FIFA cập nhật theo từng trận World Cup, tính từ ranking chính thức ${wiki.fifaUpdated} + công thức Elo.` : `FIFA rank updated per-match (Elo from official ${wiki.fifaUpdated} baseline).`)
+                      : wiki?.fifaUpdated
+                        ? (lang === "vi" ? `Hạng FIFA cập nhật ${wiki.fifaUpdated} (nguồn FIFA/Coca-Cola).` : `FIFA rank updated ${wiki.fifaUpdated} (source: FIFA/Coca-Cola).`)
+                        : t("teamStatsHint")}
                   </p>
                 </div>
               </div>
