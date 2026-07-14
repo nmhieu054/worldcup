@@ -70,13 +70,14 @@ function num(v: string): number {
 }
 
 /** Extract feeder match ids from a knockout game's placeholder labels,
- *  e.g. "Winner Match 74" / "Loser Match 101" -> ["74"]. Group-stage
- *  placeholders ("Winner Group A") yield nothing. */
+ *  e.g. "Winner Match 74" -> ["74"], "Loser Match 101" -> ["L:101"].
+ *  The "L:" prefix signals propagateKnockoutWinners to pick the loser.
+ *  Group-stage placeholders ("Winner Group A") yield nothing. */
 function parseFeeders(g: RawGame): string[] {
   const ids: string[] = [];
   for (const lab of [g.home_team_label, g.away_team_label]) {
-    const m = lab?.match(/Match\s+(\d+)/i);
-    if (m) ids.push(m[1]);
+    const m = lab?.match(/(Winner|Loser)\s+Match\s+(\d+)/i);
+    if (m) ids.push(m[1].toLowerCase() === "loser" ? `L:${m[2]}` : m[2]);
   }
   return ids;
 }
@@ -249,11 +250,15 @@ function winnerSide(m: Match): "home" | "away" | null {
   return m.penWinnerSide; // draw -> shootout decides (null if unknown)
 }
 
-/** Fill knockout slots (R16 onward) with the actual winner of each feeder match
- *  once it has finished. The bracket only seeds R32 from group standings; later
- *  rounds carry "Winner Match N" placeholders. We walk feeders and copy the
- *  winning team into the dependent slot, iterating so winners cascade through
- *  every subsequent round (R16 -> QF -> SF -> Final). */
+/** Strip the "L:" prefix from a feeder id, returning the raw match id. */
+function rawFeederId(fid: string): string {
+  return fid.startsWith("L:") ? fid.slice(2) : fid;
+}
+
+/** Fill knockout slots (R16 onward) with the actual winner or loser of each
+ *  feeder match once it has finished. Feeder ids prefixed with "L:" copy the
+ *  *loser* of the source match (used for third-place play-off); unprefixed
+ *  feeders copy the winner (used for all other knockout ties). */
 function propagateKnockoutWinners(matches: Match[]): void {
   const byId = new Map(matches.map((m) => [m.id, m]));
   // A few passes are enough (max bracket depth ~5); guard with a fixed cap.
@@ -270,11 +275,15 @@ function propagateKnockoutWinners(matches: Match[]): void {
         if (!feederId) continue;
         const hasTeam = side === "home" ? m.homeTeam : m.awayTeam;
         if (hasTeam) continue; // already resolved
-        const feeder = byId.get(feederId);
+        const fid = rawFeederId(feederId);
+        const isLoser = feederId.startsWith("L:");
+        const feeder = byId.get(fid);
         if (!feeder) continue;
         const w = winnerSide(feeder);
         if (!w) continue;
-        const team = w === "home" ? feeder.homeTeam : feeder.awayTeam;
+        // Loser feed → pick the opposite side
+        const pickSide = isLoser ? (w === "home" ? "away" : "home") : w;
+        const team = pickSide === "home" ? feeder.homeTeam : feeder.awayTeam;
         if (!team) continue;
         if (side === "home") {
           m.homeTeam = team; m.homeId = team.id;

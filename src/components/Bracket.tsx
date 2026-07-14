@@ -129,7 +129,9 @@ function DesktopBracket({ rounds, lang }: { rounds: Round[]; lang: Lang }) {
         const tx = tr.left - base.left;
         const ty = tr.top - base.top + tr.height / 2;
         for (const feederId of tie.feeders) {
-          const key = cardKeyById.get(feederId);
+          // Strip "L:" prefix used for loser-bracket feeders (third-place match)
+          const rawId = feederId.startsWith("L:") ? feederId.slice(2) : feederId;
+          const key = cardKeyById.get(rawId);
           const feeder = key ? cards.current.get(key) : undefined;
           if (!feeder) continue;
           const fr = feeder.getBoundingClientRect();
